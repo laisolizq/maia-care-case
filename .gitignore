@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build files
+.next/
+dist/
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+*.log
+
+# Test coverage
+coverage/
+
+# Editor
+.vscode/
+
+# OS
+.DS_Store
