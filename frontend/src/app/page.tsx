@@ -1,12 +1,7 @@
-import { getHealth } from '@/lib/api/health';
-
 export default async function Home() {
-  const health = await getHealth();
-
   return (
     <main className="min-h-screen bg-white">
       <div className="mx-auto max-w-5xl px-6 py-12">
-        <p className="mb-4 text-sm text-maia-dark">Estado del backend: {health.status}</p>
         <section className="mb-12">
           <h2 className="mb-4 text-4xl font-semibold">¿Cómo te encuentras hoy?</h2>
         </section>
