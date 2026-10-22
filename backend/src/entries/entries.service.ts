@@ -36,4 +36,18 @@ export class EntriesService {
       userId: user._id,
     });
   }
+
+  async findSymptoms(): Promise<string[]> {
+    const user = await this.usersService.getOrCreateDemoUser();
+
+    if (!user) {
+      throw new InternalServerErrorException('Demo user unavailable');
+    }
+
+    return this.entryModel
+      .distinct('symptoms', {
+        userId: user._id,
+      })
+      .exec();
+  }
 }

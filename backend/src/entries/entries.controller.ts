@@ -12,6 +12,11 @@ export class EntriesController {
     return this.entriesService.findAll();
   }
 
+  @Get('symptoms')
+  findSymptoms() {
+    return this.entriesService.findSymptoms();
+  }
+
   @Post()
   create(@Body() entry: CreateEntryDto) {
     return this.entriesService.create(entry);

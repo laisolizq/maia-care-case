@@ -1,3 +1,9 @@
+import EntryForm from '@/components/EntryForm';
+import EntryList from '@/components/EntryList';
+import Link from 'next/link';
+
+import { Suspense } from 'react';
+
 export default async function Home() {
   return (
     <main className="min-h-screen bg-white">
@@ -7,22 +13,23 @@ export default async function Home() {
         </section>
 
         <section className="mb-8 rounded-3xl border bg-maia-light p-8 shadow-sm">
-          <h3 className="mb-2 text-2xl font-semibold text-maia-dark">Nuevo registro</h3>
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="text-2xl font-semibold text-maia-dark">Nuevo registro</h3>
+
+            <Link
+              href="/entries"
+              className="rounded-full bg-maia-dark px-6 py-3 font-semibold text-maia-light transition-opacity hover:opacity-85"
+            >
+              Ver mis registros →
+            </Link>
+          </div>
 
           <p className="mb-6">Cuéntanos cómo te has sentido.</p>
 
           <div className="rounded-2xl bg-maia-dark p-8 text-center text-maia-light-2">
-            Aquí construiremos nuestro formulario.
-          </div>
-        </section>
-
-        <section className="mb-8 rounded-3xl border bg-maia-light p-8 shadow-sm">
-          <h3 className="mb-2 text-2xl font-semibold text-maia-dark">Mis registros</h3>
-
-          <p className="mb-6 text-maia-dark-2">Consulta cómo te has sentido en los últimos días.</p>
-
-          <div className="rounded-2xl bg-maia-dark p-8 text-center text-maia-light-2">
-            Todavía no tienes registros.
+            <Suspense fallback={<div>Cargando formulario...</div>}>
+              <EntryForm />
+            </Suspense>
           </div>
         </section>
 

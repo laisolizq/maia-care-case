@@ -15,3 +15,23 @@ export async function apiGet<T>(endpoint: string): Promise<T> {
 
   return response.json() as Promise<T>;
 }
+
+export async function apiPost<T>(endpoint: string, data: unknown): Promise<T> {
+  if (!API_URL) {
+    throw new Error('NEXT_PUBLIC_API_URL is not configured');
+  }
+
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
+}
