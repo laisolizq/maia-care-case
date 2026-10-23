@@ -25,7 +25,7 @@ Aplicación web en la que una usuaria puede registrar cómo se encuentra periód
 Clonar el repositorio e instalar las dependencias:
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
+git clone git@github.com:laisolizq/maia-care-case.git
 cd maia-care-case
 ./install.sh
 ```
