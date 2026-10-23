@@ -6,16 +6,6 @@ import { createEntry, getSymptoms } from '@/lib/api/entries';
 import { ratingFields, ratingColors, type RatingField } from '@/lib/entry-ratings';
 import type { CreateEntry } from '@/types/entry';
 
-function getTodayDate(): string {
-  const today = new Date();
-
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
-}
-
 const initialEntry: CreateEntry = {
   date: '',
   wellbeing: 0,
@@ -25,6 +15,22 @@ const initialEntry: CreateEntry = {
   symptoms: [],
   notes: '',
 };
+
+const DEFAULT_SYMPTOMS = [
+  'Cansancio',
+  'Dolor de cabeza',
+  'Hinchazón',
+];
+
+function getTodayDate(): string {
+  const today = new Date();
+
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
 
 export default function EntryForm() {
   const [entry, setEntry] = useState<CreateEntry>(() => ({
@@ -200,33 +206,33 @@ export default function EntryForm() {
       <div>
         <h4 className="font-semibold text-maia-light-2">Síntomas</h4>
 
-        {knownSymptoms.length > 0 && (
-          <div className="mt-1">
-            <p className="mt-1 text-sm font-medium text-maia-light-2">Tus síntomas habituales</p>
+        <div className="mt-1">
+          <p className="mt-1 mb-2 text-sm font-medium text-maia-light-2">
+            {knownSymptoms.length > 0 ? 'Tus síntomas habituales' : 'Sugerencias'}
+          </p>
 
-            <div className="flex flex-wrap gap-2">
-              {knownSymptoms.map((symptom) => {
-                const selected = entry.symptoms.includes(symptom);
+          <div className="flex flex-wrap gap-2">
+            {(knownSymptoms.length > 0 ? knownSymptoms : DEFAULT_SYMPTOMS).map((symptom) => {
+              const selected = entry.symptoms.includes(symptom);
 
-                return (
-                  <button
-                    key={symptom}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => toggleSymptom(symptom)}
-                    className={`rounded-full border px-4 py-1 text-sm transition-colors ${
-                      selected
-                        ? 'border-maia-dark bg-maia-dark text-maia-light'
-                        : 'border-maia-dark/20 bg-white text-maia-dark hover:border-maia-dark'
-                    }`}
-                  >
-                    {symptom} {selected ? '✓' : '+'}
-                  </button>
-                );
-              })}
-            </div>
+              return (
+                <button
+                  key={symptom}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => toggleSymptom(symptom)}
+                  className={`rounded-full border px-4 py-1 text-sm transition-colors ${
+                    selected
+                      ? 'border-maia-dark bg-maia-dark text-maia-light'
+                      : 'border-maia-dark/20 bg-white text-maia-dark hover:border-maia-dark'
+                  }`}
+                >
+                  {symptom} {selected ? '✓' : '+'}
+                </button>
+              );
+            })}
           </div>
-        )}
+        </div>
 
         <div className="mt-2 flex gap-2">
           <input
@@ -248,9 +254,9 @@ export default function EntryForm() {
             type="button"
             onClick={addSymptom}
             aria-label="Añadir síntoma"
-            className="rounded-xl bg-maia-dark px-5 text-2xl text-maia-light"
+            className="rounded-xl bg-maia-light px-5 text-m text-maia-dark"
           >
-            +
+            Añadir
           </button>
         </div>
 

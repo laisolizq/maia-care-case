@@ -16,9 +16,16 @@ Aplicación web en la que una usuaria puede registrar cómo se encuentra periód
 
 ### Requisitos
 
-- Node.js y npm (se recomienda Node.js 20.9 o superior).
+- Node.js 20.9 o superior (se recomienda Node.js 22).
+- npm
 - Docker con Docker Compose (para la database MongoDB)
 - Una clave de API de Google Gemini obtenida en [Google AI Studio](https://aistudio.google.com/api-keys).
+
+**Problemas con Docker**
+
+En algunos sistemas, especialmente Linux, pueden aparecer problemas de permisos o configuración al iniciar Docker.
+
+Si se produce algún error durante su inicialización, se recomienda consultar la [documentación oficial de Docker](https://docs.docker.com/engine/install/linux-postinstall/), donde se explican los problemas habituales de permisos y su configuración.
 
 ### Configuración
 
