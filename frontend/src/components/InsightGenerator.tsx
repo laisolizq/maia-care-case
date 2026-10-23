@@ -18,15 +18,12 @@ export default function InsightGenerator() {
     setMessage(null);
 
     try {
-      // Consultem els insights que ja tenim guardats.
       const previousInsights = await getInsights();
 
-      // El backend comprova els registres i genera o recupera l'insight.
       const result = await generateInsight();
 
       setInsight(result);
 
-      // Comprovem si l'insight ja existia abans de prémer el botó.
       const alreadyExisted = previousInsights.some((previous) => previous._id === result._id);
 
       if (alreadyExisted) {
@@ -35,8 +32,6 @@ export default function InsightGenerator() {
         setMessage('✨ Nuevo análisis generado correctamente.');
       }
     } catch (error) {
-      console.error(error);
-
       if (error instanceof Error && error.message.includes('al menos 3')) {
         setError('Necesitas al menos 3 registros para generar un análisis.');
       } else {

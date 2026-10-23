@@ -94,21 +94,61 @@ describe('EntriesService', () => {
         userId: demoUserId,
       });
     });
+
+    it('should throw ConflictException when creating a duplicate entry', async () => {
+      const duplicateError = Object.assign(new Error('E11000 duplicate key error'), {
+        code: 11000,
+      });
+
+      mockEntryModel.create.mockRejectedValue(duplicateError);
+
+      await expect(
+        service.create({
+          date: '2026-10-22',
+          wellbeing: 4,
+          sleep: 3,
+          energy: 4,
+          stress: 2,
+          symptoms: [],
+        }),
+      ).rejects.toThrow(ConflictException);
+    });
   });
-  it('should throw ConflictException when creating a duplicate entry', async () => {
-    const duplicateError = Object.assign(new Error('E11000 duplicate key error'), { code: 11000 });
 
-    mockEntryModel.create.mockRejectedValue(duplicateError);
+  describe('findLatest', () => {
+    it('should retrieve the latest entries ordered by date', async () => {
+      const entries = [
+        { _id: new Types.ObjectId(), date: '2026-10-22' },
+        { _id: new Types.ObjectId(), date: '2026-10-21' },
+      ];
 
-    await expect(
-      service.create({
-        date: '2026-10-22',
-        wellbeing: 4,
-        sleep: 3,
-        energy: 4,
-        stress: 2,
-        symptoms: [],
-      }),
-    ).rejects.toThrow(ConflictException);
+      const execMock = vi.fn().mockResolvedValue(entries);
+
+      const limitMock = vi.fn().mockReturnValue({
+        exec: execMock,
+      });
+
+      const sortMock = vi.fn().mockReturnValue({
+        limit: limitMock,
+      });
+
+      mockEntryModel.find.mockReturnValue({
+        sort: sortMock,
+      });
+
+      const result = await service.findLatest(7);
+
+      expect(mockEntryModel.find).toHaveBeenCalledWith({
+        userId: demoUserId,
+      });
+
+      expect(sortMock).toHaveBeenCalledWith({
+        date: -1,
+      });
+
+      expect(limitMock).toHaveBeenCalledWith(7);
+
+      expect(result).toEqual(entries);
+    });
   });
 });

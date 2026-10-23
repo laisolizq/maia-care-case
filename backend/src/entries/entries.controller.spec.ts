@@ -10,6 +10,7 @@ describe('EntriesController', () => {
   const mockEntriesService = {
     findAll: vi.fn(),
     create: vi.fn(),
+    findSymptoms: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -66,6 +67,19 @@ describe('EntriesController', () => {
 
       expect(result).toEqual(savedEntry);
       expect(mockEntriesService.create).toHaveBeenCalledWith(entry);
+    });
+  });
+
+  describe('findSymptoms', () => {
+    it('should return the user symptoms', async () => {
+      const symptoms = ['Cansancio', 'Dolor de cabeza', 'Insomnio'];
+
+      mockEntriesService.findSymptoms.mockResolvedValue(symptoms);
+
+      const result = await controller.findSymptoms();
+
+      expect(result).toEqual(symptoms);
+      expect(mockEntriesService.findSymptoms).toHaveBeenCalledOnce();
     });
   });
 });
