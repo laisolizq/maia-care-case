@@ -2,6 +2,7 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { vi } from 'vitest';
+import { ConflictException } from '@nestjs/common';
 
 import { EntriesService } from './entries.service.js';
 import { Entry } from './schemas/entry.schema.js';
@@ -93,5 +94,21 @@ describe('EntriesService', () => {
         userId: demoUserId,
       });
     });
+  });
+  it('should throw ConflictException when creating a duplicate entry', async () => {
+    const duplicateError = Object.assign(new Error('E11000 duplicate key error'), { code: 11000 });
+
+    mockEntryModel.create.mockRejectedValue(duplicateError);
+
+    await expect(
+      service.create({
+        date: '2026-10-22',
+        wellbeing: 4,
+        sleep: 3,
+        energy: 4,
+        stress: 2,
+        symptoms: [],
+      }),
+    ).rejects.toThrow(ConflictException);
   });
 });

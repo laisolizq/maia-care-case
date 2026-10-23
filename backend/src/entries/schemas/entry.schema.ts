@@ -34,3 +34,4 @@ export class Entry {
 }
 
 export const EntrySchema = SchemaFactory.createForClass(Entry);
+EntrySchema.index({ userId: 1, date: 1 }, { unique: true });

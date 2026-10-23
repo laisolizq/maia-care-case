@@ -305,7 +305,7 @@ export default function EntryForm() {
       )}
 
       {success && (
-        <p role="status" className="font-medium">
+        <p role="status" className="font-medium text-maia-light-2">
           ¡Registro guardado correctamente!
         </p>
       )}

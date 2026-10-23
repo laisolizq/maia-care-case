@@ -1,5 +1,5 @@
 import EntryForm from '@/components/EntryForm';
-import EntryList from '@/components/EntryList';
+import InsightGenerator from '@/components/InsightGenerator';
 import Link from 'next/link';
 
 import { Suspense } from 'react';
@@ -34,24 +34,9 @@ export default async function Home() {
         </section>
 
         <section className="rounded-3xl bg-maia-dark p-8">
-          <h3 className="mb-2 text-2xl font-semibold text-maia-light">Descubre tus patrones</h3>
+          <h2 className="mb-4 text-xl font-semibold text-maia-light">Descubre tus patrones</h2>
 
-          <p className="mb-6 max-w-2xl text-maia-light-2">
-            Utiliza tus registros para descubrir posibles relaciones entre tu descanso, energía,
-            estrés y bienestar.
-          </p>
-
-          <button
-            type="button"
-            disabled
-            className="rounded-full bg-maia-light px-7 py-3 font-medium text-maia-dark font-semibold"
-          >
-            Generar un nuevo insight
-          </button>
-
-          <p className="mt-3 text-sm text-maia-light-2">
-            Disponible cuando conectemos la generación de insights.
-          </p>
+          <InsightGenerator />
         </section>
       </div>
     </main>
