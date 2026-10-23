@@ -72,6 +72,10 @@ export class GeminiService {
       throw new Error('Gemini returned an invalid insight');
     }
 
-    return result;
+    return {
+      summary: result.summary,
+      patterns: result.patterns,
+      topicsToDiscuss: result.topicsToDiscuss,
+    };
   }
 }

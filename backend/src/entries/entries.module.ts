@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from '../users/users.module.js';
 import { EntriesController } from './entries.controller.js';
 import { EntriesService } from './entries.service.js';
+import { EntriesRepository } from './entries.repository.js';
 import { Entry, EntrySchema } from './schemas/entry.schema.js';
 
 @Module({
@@ -17,7 +18,7 @@ import { Entry, EntrySchema } from './schemas/entry.schema.js';
     ]),
   ],
   controllers: [EntriesController],
-  providers: [EntriesService],
+  providers: [EntriesService, EntriesRepository],
   exports: [EntriesService],
 })
 export class EntriesModule {}

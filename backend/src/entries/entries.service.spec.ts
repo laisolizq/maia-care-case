@@ -1,10 +1,11 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
-import { vi } from 'vitest';
-import { ConflictException } from '@nestjs/common';
+import { vi, afterEach } from 'vitest';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 
 import { EntriesService } from './entries.service.js';
+import { EntriesRepository } from './entries.repository.js';
 import { Entry } from './schemas/entry.schema.js';
 import { UsersService } from '../users/users.service.js';
 
@@ -24,6 +25,8 @@ describe('EntriesService', () => {
 
   beforeEach(async () => {
     vi.resetAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-23T12:00:00Z'));
 
     mockUsersService.getOrCreateDemoUser.mockResolvedValue({
       _id: demoUserId,
@@ -33,6 +36,7 @@ describe('EntriesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EntriesService,
+        EntriesRepository,
         {
           provide: getModelToken(Entry.name),
           useValue: mockEntryModel,
@@ -47,6 +51,8 @@ describe('EntriesService', () => {
     service = module.get<EntriesService>(EntriesService);
   });
 
+  afterEach(() => vi.useRealTimers());
+
   describe('findAll', () => {
     it('should return entries belonging to the demo user', async () => {
       const entries = [
@@ -55,7 +61,7 @@ describe('EntriesService', () => {
       ];
 
       mockEntryModel.find.mockReturnValue({
-        exec: vi.fn().mockResolvedValue(entries),
+        sort: vi.fn().mockReturnValue({ exec: vi.fn().mockResolvedValue(entries) }),
       });
 
       const result = await service.findAll();
@@ -68,6 +74,39 @@ describe('EntriesService', () => {
   });
 
   describe('create', () => {
+    it('should reject future dates before accessing persistence', async () => {
+      await expect(
+        service.create({
+          date: '2026-10-24',
+          wellbeing: 3,
+          sleep: 3,
+          energy: 3,
+          stress: 3,
+          symptoms: [],
+        }),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(mockEntryModel.create).not.toHaveBeenCalled();
+      expect(mockUsersService.getOrCreateDemoUser).not.toHaveBeenCalled();
+    });
+
+    it('should accept today in Madrid even when UTC is still the previous day', async () => {
+      vi.setSystemTime(new Date('2026-10-22T22:30:00Z'));
+      const entry = {
+        date: '2026-10-23',
+        wellbeing: 3,
+        sleep: 3,
+        energy: 3,
+        stress: 3,
+        symptoms: [],
+      };
+      mockEntryModel.create.mockResolvedValue({ ...entry, userId: demoUserId });
+
+      await service.create(entry);
+
+      expect(mockEntryModel.create).toHaveBeenCalledOnce();
+    });
+
     it('should create an entry associated with the demo user', async () => {
       const entry = {
         date: '2026-10-22',

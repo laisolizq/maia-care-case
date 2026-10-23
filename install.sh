@@ -19,6 +19,11 @@ for command in node npm docker; do
     fi
 done
 
+if ! node -e 'const [major, minor] = process.versions.node.split(".").map(Number); process.exit(major > 20 || (major === 20 && minor >= 19) ? 0 : 1)'; then
+    echo "❌ Error: se requiere Node.js 20.19 o superior."
+    exit 1
+fi
+
 if ! docker compose version &> /dev/null; then
     echo "❌ Error: Docker Compose no está disponible."
     exit 1

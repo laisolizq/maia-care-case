@@ -84,6 +84,25 @@ describe('GeminiService', () => {
     );
   });
 
+  it('should discard unexpected fields from the provider response', async () => {
+    createMock.mockResolvedValue({
+      output_text: JSON.stringify({
+        summary: 'Resumen orientativo.',
+        patterns: [],
+        topicsToDiscuss: [],
+        userId: 'unexpected-user',
+        entryIds: ['unexpected-entry'],
+        entriesKey: 'unexpected-key',
+      }),
+    });
+
+    await expect(service.generateInsight('Analiza estos registros')).resolves.toEqual({
+      summary: 'Resumen orientativo.',
+      patterns: [],
+      topicsToDiscuss: [],
+    });
+  });
+
   it('should reject malformed JSON', async () => {
     createMock.mockResolvedValue({
       output_text: '{ invalid json }',

@@ -7,12 +7,13 @@ import { UsersModule } from '../users/users.module.js';
 import { GeminiService } from './ai/gemini.service.js';
 import { InsightsController } from './insights.controller.js';
 import { InsightsService } from './insights.service.js';
+import { InsightsRepository } from './insights.repository.js';
 import { Insight, InsightSchema } from './schemas/insight.schema.js';
 
 @Module({
   imports: [
     UsersModule,
-    EntriesModule, // ← IMPORTANTE
+    EntriesModule,
     MongooseModule.forFeature([
       {
         name: Insight.name,
@@ -21,6 +22,6 @@ import { Insight, InsightSchema } from './schemas/insight.schema.js';
     ]),
   ],
   controllers: [InsightsController],
-  providers: [InsightsService, GeminiService],
+  providers: [InsightsService, InsightsRepository, GeminiService],
 })
 export class InsightsModule {}

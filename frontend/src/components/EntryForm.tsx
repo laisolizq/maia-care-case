@@ -3,6 +3,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 
 import { createEntry, getSymptoms } from '@/lib/api/entries';
+import { ApiError } from '@/lib/api/client';
+import { getTodayDate } from '@/lib/calendar';
 import { ratingFields, ratingColors, type RatingField } from '@/lib/entry-ratings';
 import type { CreateEntry } from '@/types/entry';
 
@@ -16,21 +18,7 @@ const initialEntry: CreateEntry = {
   notes: '',
 };
 
-const DEFAULT_SYMPTOMS = [
-  'Cansancio',
-  'Dolor de cabeza',
-  'Hinchazón',
-];
-
-function getTodayDate(): string {
-  const today = new Date();
-
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
-}
+const DEFAULT_SYMPTOMS = ['Cansancio', 'Dolor de cabeza', 'Hinchazón'];
 
 export default function EntryForm() {
   const [entry, setEntry] = useState<CreateEntry>(() => ({
@@ -127,8 +115,12 @@ export default function EntryForm() {
       });
       setSymptomInput('');
       setSuccess(true);
-    } catch {
-      setError('No se ha podido guardar el registro. Inténtalo de nuevo.');
+    } catch (error) {
+      setError(
+        error instanceof ApiError && (error.status === 400 || error.status === 409)
+          ? error.message
+          : 'No se ha podido guardar el registro. Inténtalo de nuevo.',
+      );
     } finally {
       setIsSaving(false);
     }
@@ -146,6 +138,7 @@ export default function EntryForm() {
           id="date"
           type="date"
           required
+          max={getTodayDate()}
           value={entry.date}
           onChange={(event) =>
             setEntry((previous) => ({

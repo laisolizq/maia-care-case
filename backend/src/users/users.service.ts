@@ -1,31 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-
-import { User } from './schemas/user.schema.js';
+import { UsersRepository } from './users.repository.js';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectModel(User.name)
-    private readonly userModel: Model<User>,
-  ) {}
+  constructor(private readonly usersRepository: UsersRepository) {}
 
-  async getOrCreateDemoUser() {
-    return this.userModel
-      .findOneAndUpdate(
-        { username: 'demo' },
-        {
-          $setOnInsert: {
-            username: 'demo',
-            name: 'Usuaria de demostración',
-          },
-        },
-        {
-          upsert: true,
-          new: true,
-        },
-      )
-      .exec();
+  getOrCreateDemoUser() {
+    return this.usersRepository.getOrCreate('demo', 'Usuaria de demostración');
   }
 }

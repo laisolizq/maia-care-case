@@ -42,7 +42,7 @@ export const ratingColors = [
   'bg-green-100 border-green-500',
 ];
 
-// Convierte el valor guardado en la posición visual correspondiente.
+// La escala visual va de peor a mejor; en estrés, un valor alto significa peor estado.
 export function getRatingIndex(field: RatingField, value: number): number {
   const config = ratingFields.find((item) => item.key === field);
 

@@ -1,3 +1,4 @@
+import { configureApp } from '../src/configure-app.js';
 import { BadGatewayException, BadRequestException, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
@@ -6,7 +7,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { InsightsController } from '../src/insights/insights.controller.js';
 import { InsightsService } from '../src/insights/insights.service.js';
 
-describe('Insights API (E2E)', () => {
+describe('Insights API (HTTP)', () => {
   let app: INestApplication;
 
   const mockInsightsService = {
@@ -27,7 +28,7 @@ describe('Insights API (E2E)', () => {
 
     app = module.createNestApplication();
 
-    app.setGlobalPrefix('api');
+    configureApp(app);
 
     await app.init();
   });

@@ -5,6 +5,7 @@ import { Types } from 'mongoose';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { InsightsService } from './insights.service.js';
+import { InsightsRepository } from './insights.repository.js';
 import { Insight } from './schemas/insight.schema.js';
 import { EntriesService } from '../entries/entries.service.js';
 import { UsersService } from '../users/users.service.js';
@@ -41,6 +42,7 @@ describe('InsightsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InsightsService,
+        InsightsRepository,
         {
           provide: getModelToken(Insight.name),
           useValue: insightModelMock,
@@ -207,6 +209,34 @@ describe('InsightsService', () => {
 
     // Comprobamos que no hemos guardado nada.
     expect(insightModelMock.create).not.toHaveBeenCalled();
+  });
+
+  it('should preserve internal identifiers even if the provider returns extra fields', async () => {
+    const entries = Array.from({ length: 3 }, () => ({ _id: new Types.ObjectId() }));
+    entriesServiceMock.findLatest.mockResolvedValue(entries);
+    insightModelMock.findOne.mockReturnValue({ exec: vi.fn().mockResolvedValue(null) });
+    geminiServiceMock.generateInsight.mockResolvedValue({
+      summary: 'Resumen orientativo.',
+      patterns: [],
+      topicsToDiscuss: [],
+      userId: new Types.ObjectId(),
+      entryIds: [],
+      entriesKey: 'unexpected-key',
+    });
+
+    await service.generate();
+
+    expect(insightModelMock.create).toHaveBeenCalledWith({
+      userId: user._id,
+      entryIds: entries.map((entry) => entry._id),
+      entriesKey: entries
+        .map((entry) => entry._id.toString())
+        .sort()
+        .join(','),
+      summary: 'Resumen orientativo.',
+      patterns: [],
+      topicsToDiscuss: [],
+    });
   });
 
   it('should generate the same entriesKey regardless of entry order', async () => {

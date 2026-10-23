@@ -1,4 +1,5 @@
-import { type INestApplication, ValidationPipe } from '@nestjs/common';
+import { configureApp } from '../src/configure-app.js';
+import { ConflictException, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -6,7 +7,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { EntriesController } from '../src/entries/entries.controller.js';
 import { EntriesService } from '../src/entries/entries.service.js';
 
-describe('Entries API (E2E)', () => {
+describe('Entries API (HTTP)', () => {
   let app: INestApplication;
 
   const mockEntriesService = {
@@ -28,15 +29,7 @@ describe('Entries API (E2E)', () => {
 
     app = module.createNestApplication();
 
-    app.setGlobalPrefix('api');
-
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
+    configureApp(app);
 
     await app.init();
   });
@@ -106,5 +99,76 @@ describe('Entries API (E2E)', () => {
 
     expect(response.body.statusCode).toBe(400);
     expect(mockEntriesService.create).not.toHaveBeenCalled();
+  });
+
+  it.each(['2026-02-31', '2026-04-31', '2026-02-29', '2026-10-22T12:00:00Z'])(
+    'POST /api/entries should reject invalid calendar date %s',
+    async (date) => {
+      await request(app.getHttpServer())
+        .post('/api/entries')
+        .send({
+          date,
+          wellbeing: 3,
+          sleep: 3,
+          energy: 3,
+          stress: 3,
+          symptoms: [],
+        })
+        .expect(400);
+
+      expect(mockEntriesService.create).not.toHaveBeenCalled();
+    },
+  );
+
+  it('POST /api/entries should accept a valid leap day', async () => {
+    const entry = {
+      date: '2024-02-29',
+      wellbeing: 3,
+      sleep: 3,
+      energy: 3,
+      stress: 3,
+      symptoms: [],
+    };
+    mockEntriesService.create.mockResolvedValue(entry);
+
+    await request(app.getHttpServer()).post('/api/entries').send(entry).expect(201);
+    expect(mockEntriesService.create).toHaveBeenCalledWith(entry);
+  });
+
+  it('POST /api/entries should reject client-supplied user identifiers', async () => {
+    await request(app.getHttpServer())
+      .post('/api/entries')
+      .send({
+        date: '2026-10-22',
+        wellbeing: 3,
+        sleep: 3,
+        energy: 3,
+        stress: 3,
+        symptoms: [],
+        userId: 'other-user',
+      })
+      .expect(400);
+
+    expect(mockEntriesService.create).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/entries should return an actionable conflict message', async () => {
+    mockEntriesService.create.mockRejectedValue(
+      new ConflictException('Ya existe un registro para esta fecha; selecciona otra.'),
+    );
+
+    const response = await request(app.getHttpServer())
+      .post('/api/entries')
+      .send({
+        date: '2026-10-22',
+        wellbeing: 3,
+        sleep: 3,
+        energy: 3,
+        stress: 3,
+        symptoms: [],
+      })
+      .expect(409);
+
+    expect(response.body.message).toBe('Ya existe un registro para esta fecha; selecciona otra.');
   });
 });

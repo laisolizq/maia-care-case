@@ -159,10 +159,10 @@ export default function InsightList() {
 
                     <div className="flex flex-wrap gap-2">
                       {[
-                        { key: 'wellbeing', label: 'Benestar', value: entry.wellbeing },
-                        { key: 'sleep', label: 'Son', value: entry.sleep },
-                        { key: 'energy', label: 'Energia', value: entry.energy },
-                        { key: 'stress', label: 'Estrès', value: entry.stress },
+                        { key: 'wellbeing', label: 'Bienestar', value: entry.wellbeing },
+                        { key: 'sleep', label: 'Sueño', value: entry.sleep },
+                        { key: 'energy', label: 'Energía', value: entry.energy },
+                        { key: 'stress', label: 'Estrés', value: entry.stress },
                       ].map((rating) => {
                         const index = getRatingIndex(
                           rating.key as 'wellbeing' | 'sleep' | 'energy' | 'stress',
@@ -185,8 +185,7 @@ export default function InsightList() {
 
                     {entry.symptoms.length > 0 && (
                       <p className="mt-3">
-                        <span className="font-semibold">Símptomas:</span>{' '}
-                        {entry.symptoms.join(', ')}
+                        <span className="font-semibold">Síntomas:</span> {entry.symptoms.join(', ')}
                       </p>
                     )}
 

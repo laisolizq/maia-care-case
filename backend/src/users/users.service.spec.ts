@@ -4,6 +4,7 @@ import { Types } from 'mongoose';
 import { vi } from 'vitest';
 
 import { UsersService } from './users.service.js';
+import { UsersRepository } from './users.repository.js';
 import { User } from './schemas/user.schema.js';
 
 describe('UsersService', () => {
@@ -19,6 +20,7 @@ describe('UsersService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
+        UsersRepository,
         {
           provide: getModelToken(User.name),
           useValue: mockUserModel,

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 import { generateInsight, getInsights } from '@/lib/api/insights';
+import { ApiError } from '@/lib/api/client';
 import type { Insight } from '@/types/insight';
 
 export default function InsightGenerator() {
@@ -32,8 +33,8 @@ export default function InsightGenerator() {
         setMessage('✨ Nuevo análisis generado correctamente.');
       }
     } catch (error) {
-      if (error instanceof Error && error.message.includes('al menos 3')) {
-        setError('Necesitas al menos 3 registros para generar un análisis.');
+      if (error instanceof ApiError && error.status === 400) {
+        setError(error.message);
       } else {
         setError('No se ha podido generar el insight. Inténtalo de nuevo.');
       }

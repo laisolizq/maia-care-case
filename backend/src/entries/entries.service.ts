@@ -1,16 +1,19 @@
-import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import type { Model } from 'mongoose';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
-import { Entry } from './schemas/entry.schema.js';
+import { EntriesRepository } from './entries.repository.js';
+import { getTodayDate } from '../common/calendar.js';
 import type { CreateEntryDto } from './dto/create-entry.dto.js';
 import { UsersService } from '../users/users.service.js';
 
 @Injectable()
 export class EntriesService {
   constructor(
-    @InjectModel(Entry.name)
-    private readonly entryModel: Model<Entry>,
+    private readonly entriesRepository: EntriesRepository,
     private readonly usersService: UsersService,
   ) {}
 
@@ -21,10 +24,14 @@ export class EntriesService {
       throw new InternalServerErrorException('Demo user unavailable');
     }
 
-    return this.entryModel.find({ userId: user._id }).exec();
+    return this.entriesRepository.findAll(user._id);
   }
 
   async create(entry: CreateEntryDto) {
+    if (entry.date > getTodayDate()) {
+      throw new BadRequestException('No puedes registrar una fecha futura.');
+    }
+
     const user = await this.usersService.getOrCreateDemoUser();
 
     if (!user) {
@@ -32,13 +39,19 @@ export class EntriesService {
     }
 
     try {
-      return await this.entryModel.create({
-        ...entry,
+      return await this.entriesRepository.create({
+        date: entry.date,
+        wellbeing: entry.wellbeing,
+        sleep: entry.sleep,
+        energy: entry.energy,
+        stress: entry.stress,
+        symptoms: entry.symptoms,
+        notes: entry.notes,
         userId: user._id,
       });
     } catch (error: unknown) {
       if (error instanceof Error && 'code' in error && error.code === 11000) {
-        throw new ConflictException('Already exists an entry for this date');
+        throw new ConflictException('Ya existe un registro para esta fecha; selecciona otra.');
       }
 
       throw error;
@@ -52,11 +65,7 @@ export class EntriesService {
       throw new InternalServerErrorException('Demo user unavailable');
     }
 
-    return this.entryModel
-      .distinct('symptoms', {
-        userId: user._id,
-      })
-      .exec();
+    return this.entriesRepository.findSymptoms(user._id);
   }
 
   async findLatest(limit: number) {
@@ -66,6 +75,6 @@ export class EntriesService {
       throw new InternalServerErrorException('Demo user unavailable');
     }
 
-    return this.entryModel.find({ userId: user._id }).sort({ date: -1 }).limit(limit).exec();
+    return this.entriesRepository.findLatest(user._id, limit);
   }
 }

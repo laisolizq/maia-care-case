@@ -5,6 +5,13 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
 
+# El cierre por grupos de procesos y wait -n requieren este entorno.
+if (( BASH_VERSINFO[0] < 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 3) )) || ! command -v setsid &> /dev/null; then
+    echo "Error: este script requiere Bash 4.3 o superior y setsid."
+    echo "Consulta la sección de inicio manual del README para otros entornos."
+    exit 1
+fi
+
 # Validar argumentos
 if [[ $# -gt 1 || ( $# -eq 1 && "$1" != "--clean-db" ) ]]; then
     echo "Uso: ./start.sh [--clean-db]"
