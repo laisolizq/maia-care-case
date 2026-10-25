@@ -1,8 +1,8 @@
 import {
-  BadGatewayException,
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 import { EntriesService } from '../entries/entries.service.js';
@@ -10,12 +10,15 @@ import { UsersService } from '../users/users.service.js';
 import { GeminiService } from './ai/gemini.service.js';
 import { InsightsRepository } from './insights.repository.js';
 import type { InsightContent } from './ai/insight-content.interface.js';
+import { toGeminiHttpException } from './ai/gemini-error.js';
 
 const MIN_ENTRIES = 3;
 const MAX_ENTRIES = 7;
 
 @Injectable()
 export class InsightsService {
+  private readonly logger = new Logger(InsightsService.name);
+
   constructor(
     private readonly insightsRepository: InsightsRepository,
     private readonly entriesService: EntriesService,
@@ -92,8 +95,10 @@ ${JSON.stringify(dataForAI)}
 
     try {
       content = await this.geminiService.generateInsight(prompt);
-    } catch {
-      throw new BadGatewayException('No se ha podido generar el insight con Gemini');
+    } catch (error: unknown) {
+      const exception = toGeminiHttpException(error);
+      this.logger.warn(exception.getResponse());
+      throw exception;
     }
 
     try {

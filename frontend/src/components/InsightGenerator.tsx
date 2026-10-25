@@ -33,7 +33,7 @@ export default function InsightGenerator() {
         setMessage('✨ Nuevo análisis generado correctamente.');
       }
     } catch (error) {
-      if (error instanceof ApiError && error.status === 400) {
+      if (error instanceof ApiError) {
         setError(error.message);
       } else {
         setError('No se ha podido generar el insight. Inténtalo de nuevo.');

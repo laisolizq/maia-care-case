@@ -29,18 +29,6 @@ if ! docker compose version &> /dev/null; then
     exit 1
 fi
 
-# Comprobar versión mínima de Node.js
-NODE_VERSION="$(node -v | sed 's/^v//')"
-
-if ! node -e "
-  const [major, minor] = process.versions.node.split('.').map(Number);
-  process.exit(major > 20 || (major === 20 && minor >= 9) ? 0 : 1);
-"; then
-    echo "❌ Node.js $NODE_VERSION no es compatible."
-    echo "   Se requiere Node.js 20.9 o superior (recomendado: 22)."
-    exit 1
-fi
-
 # 2. Instalar dependencias del backend
 echo "Instalando dependencias del backend..."
 (

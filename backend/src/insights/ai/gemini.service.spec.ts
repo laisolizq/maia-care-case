@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GeminiService } from './gemini.service.js';
+import { GeminiInvalidResponseError } from './gemini-error.js';
 
 // Creamos el mock de la llamada a Gemini.
 const { createMock } = vi.hoisted(() => ({
@@ -71,6 +72,7 @@ describe('GeminiService', () => {
         model: 'fake-model',
         input: 'Analiza estos registros',
       }),
+      { timeout: 60_000, maxRetries: 0 },
     );
   });
 
@@ -108,7 +110,9 @@ describe('GeminiService', () => {
       output_text: '{ invalid json }',
     });
 
-    await expect(service.generateInsight('Analiza estos registros')).rejects.toThrow(SyntaxError);
+    await expect(service.generateInsight('Analiza estos registros')).rejects.toThrow(
+      GeminiInvalidResponseError,
+    );
   });
 
   it('should reject an insight without summary', async () => {

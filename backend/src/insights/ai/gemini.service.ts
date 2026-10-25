@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI } from '@google/genai';
 import type { InsightContent } from './insight-content.interface.js';
+import { GeminiInvalidResponseError } from './gemini-error.js';
 
 function isInsightContent(value: unknown): value is InsightContent {
   if (typeof value !== 'object' || value === null) {
@@ -34,42 +35,50 @@ export class GeminiService {
   }
 
   async generateInsight(prompt: string): Promise<InsightContent> {
-    const response = await this.ai.interactions.create({
-      model: this.model,
-      input: prompt,
-      response_format: {
-        type: 'text',
-        mime_type: 'application/json',
-        schema: {
-          type: 'object',
-          properties: {
-            summary: {
-              type: 'string',
+    const response = await this.ai.interactions.create(
+      {
+        model: this.model,
+        input: prompt,
+        response_format: {
+          type: 'text',
+          mime_type: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              summary: {
+                type: 'string',
+              },
+              patterns: {
+                type: 'array',
+                items: { type: 'string' },
+              },
+              topicsToDiscuss: {
+                type: 'array',
+                items: { type: 'string' },
+              },
             },
-            patterns: {
-              type: 'array',
-              items: { type: 'string' },
-            },
-            topicsToDiscuss: {
-              type: 'array',
-              items: { type: 'string' },
-            },
+            required: ['summary', 'patterns', 'topicsToDiscuss'],
           },
-          required: ['summary', 'patterns', 'topicsToDiscuss'],
         },
       },
-    });
+      { timeout: 60_000, maxRetries: 0 },
+    );
 
     const text = response.output_text;
 
     if (!text) {
-      throw new Error('Gemini returned an empty response');
+      throw new GeminiInvalidResponseError('Gemini returned an empty response');
     }
 
-    const result: unknown = JSON.parse(text);
+    let result: unknown;
+    try {
+      result = JSON.parse(text);
+    } catch {
+      throw new GeminiInvalidResponseError('Gemini returned malformed JSON');
+    }
 
     if (!isInsightContent(result)) {
-      throw new Error('Gemini returned an invalid insight');
+      throw new GeminiInvalidResponseError('Gemini returned an invalid insight');
     }
 
     return {
