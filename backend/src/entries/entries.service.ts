@@ -17,6 +17,7 @@ export class EntriesService {
     private readonly usersService: UsersService,
   ) {}
 
+  // Obtiene todos los registros disponibles en el sistema
   async findAll() {
     const user = await this.usersService.getOrCreateDemoUser();
 
@@ -27,6 +28,7 @@ export class EntriesService {
     return this.entriesRepository.findAll(user._id);
   }
 
+  // Crea un nuevo registro, asegurándose de que la fecha no sea futura y manejando posibles conflictos de duplicados
   async create(entry: CreateEntryDto) {
     if (entry.date > getTodayDate()) {
       throw new BadRequestException('No puedes registrar una fecha futura.');
@@ -38,6 +40,7 @@ export class EntriesService {
       throw new InternalServerErrorException('Demo user unavailable');
     }
 
+    // Intentamos crear el registro y manejamos posibles errores de duplicado
     try {
       return await this.entriesRepository.create({
         date: entry.date,
@@ -58,6 +61,7 @@ export class EntriesService {
     }
   }
 
+  // Obtiene todos los síntomas distintos registrados de un usuario específico
   async findSymptoms(): Promise<string[]> {
     const user = await this.usersService.getOrCreateDemoUser();
 
@@ -68,6 +72,7 @@ export class EntriesService {
     return this.entriesRepository.findSymptoms(user._id);
   }
 
+  // Obtiene los registros más recientes para un usuario específico, limitando la cantidad de resultados
   async findLatest(limit: number) {
     const user = await this.usersService.getOrCreateDemoUser();
 

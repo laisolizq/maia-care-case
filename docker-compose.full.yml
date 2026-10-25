@@ -1,7 +1,6 @@
 services:
   backend:
-    build:
-      context: ./backend
+    build: ./backend
     init: true
     env_file:
       - ./backend/.env
@@ -27,10 +26,7 @@ services:
       retries: 5
 
   frontend:
-    build:
-      context: ./frontend
-      args:
-        NEXT_PUBLIC_API_URL: http://localhost:3001/api
+    build: ./frontend
     init: true
     ports:
       - '127.0.0.1:3000:3000'

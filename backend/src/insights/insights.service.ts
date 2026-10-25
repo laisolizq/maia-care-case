@@ -17,8 +17,10 @@ const MAX_ENTRIES = 7;
 
 @Injectable()
 export class InsightsService {
+  // Usamos un logger para registrar advertencias y errores relacionados con la generación de insights
   private readonly logger = new Logger(InsightsService.name);
 
+  // Inyectamos los servicios y repositorios necesarios en el constructor
   constructor(
     private readonly insightsRepository: InsightsRepository,
     private readonly entriesService: EntriesService,
@@ -26,34 +28,44 @@ export class InsightsService {
     private readonly geminiService: GeminiService,
   ) {}
 
+  // Este método genera un insight basado en los registros más recientes del usuario de demostración
   async generate() {
+    // Obtenemos o creamos un usuario de demostración
     const user = await this.usersService.getOrCreateDemoUser();
 
+    // Comprobamos si el usuario de demostración está disponible; si no, lanzamos una excepción
     if (!user) {
       throw new InternalServerErrorException('Demo user unavailable');
     }
 
+    // Obtenemos los registros más recientes del usuario de demostración
     const entries = await this.entriesService.findLatest(MAX_ENTRIES);
 
+    // Verificamos que haya suficientes registros para generar un insight
     if (entries.length < MIN_ENTRIES) {
       throw new BadRequestException(
         `Necesitas al menos ${MIN_ENTRIES} registros para generar un insight`,
       );
     }
 
+    // Creamos una clave única basada en los IDs de los registros para evitar duplicados
     const entryIds = entries.map((entry) => entry._id);
 
+    // Ordenamos los IDs y los unimos en una cadena para formar la clave
     const entriesKey = entryIds
       .map((id) => id.toString())
       .sort()
       .join(',');
 
+    // Verificamos si ya existe un insight para esta combinación de registros
     const existingInsight = await this.insightsRepository.findByEntriesKey(user._id, entriesKey);
 
+    // Si existe un insight previo, lo devolvemos directamente
     if (existingInsight) {
       return existingInsight;
     }
 
+    // Preparamos los datos de los registros para enviarlos al servicio de IA
     const dataForAI = entries.map((entry) => ({
       date: entry.date,
       wellbeing: entry.wellbeing,
@@ -93,6 +105,7 @@ ${JSON.stringify(dataForAI)}
 
     let content: InsightContent;
 
+    // Intentamos generar un insight utilizando el servicio de IA Gemini
     try {
       content = await this.geminiService.generateInsight(prompt);
     } catch (error: unknown) {
@@ -101,6 +114,7 @@ ${JSON.stringify(dataForAI)}
       throw exception;
     }
 
+    // Intentamos crear un nuevo insight en la base de datos
     try {
       return await this.insightsRepository.create({
         userId: user._id,
@@ -123,6 +137,7 @@ ${JSON.stringify(dataForAI)}
     }
   }
 
+  // Este método obtiene todos los insights generados para el usuario de demostración
   async findAll() {
     const user = await this.usersService.getOrCreateDemoUser();
 

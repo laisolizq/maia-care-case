@@ -52,8 +52,13 @@ docker compose -f docker-compose.yml -f docker-compose.full.yml up --build -d --
 
 La primera ejecución necesita Internet para descargar imágenes, dependencias y fuentes. Puede tardar varios minutos.
 
+Cada Dockerfile sigue los mismos pasos: parte de Node.js 22, instala las dependencias con `npm ci`, copia el código y ejecuta `npm run build`. Al arrancar el contenedor, el backend ejecuta `node dist/main.js` y el frontend `npm start`. He dejado una sola etapa en cada Dockerfile para que sea más fácil seguir el proceso.
+
+Compose conecta los tres servicios y mantiene los healthchecks: el backend espera a que MongoDB responda y el frontend espera al backend. Con `--wait`, el comando termina cuando los tres han superado esas comprobaciones.
+
 - **Frontend:** http://localhost:3000
-- **API y estado:** http://localhost:3001/api/health
+- **Backend:** http://localhost:3001/api
+- **Estado del backend:** http://localhost:3001/api/health
 
 MongoDB guarda los datos en un volumen para conservarlos entre arranques.
 
@@ -73,28 +78,6 @@ docker compose -f docker-compose.yml -f docker-compose.full.yml down
 Para volver a arrancar, usa el comando `up` anterior. Si has cambiado el código, `--build` reconstruye las imágenes con esos cambios.
 
 Las dos opciones comparten la base de datos local si se usan desde la misma carpeta. Antes de cambiar de una a otra, detén el frontend y el backend, porque utilizan los mismos puertos 3000 y 3001. No añadas `-v` al comando `down` si quieres conservar los datos.
-
-#### Cómo funcionan los healthchecks
-
-Los **healthchecks** son comprobaciones periódicas que Docker ejecuta dentro de cada contenedor para saber si el servicio responde:
-
-- **MongoDB:** ejecuta un `ping` a la base de datos.
-- **Backend:** consulta `/api/health` y comprueba que devuelve una respuesta HTTP correcta.
-- **Frontend:** solicita la página principal y comprueba que devuelve una respuesta HTTP correcta.
-
-`depends_on` con `condition: service_healthy` hace que el backend espere a que MongoDB supere su comprobación y que el frontend espere al backend. `--wait` hace que el comando de arranque espere hasta que los tres servicios estén saludables.
-
-Los parámetros de cada healthcheck son:
-
-| Parámetro           | Para qué sirve                                                                                                                 |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `test`              | El comando que comprueba si el servicio responde.                                                                              |
-| `interval: 10s`     | El intervalo entre comprobaciones.                                                                                             |
-| `timeout: 5s`       | El tiempo máximo de cada intento. Las consultas HTTP tienen además un límite interno de tres segundos.                         |
-| `start_period: 20s` | Un margen inicial durante el que los fallos no cuentan. Si una comprobación funciona antes, el servicio ya se considera listo. |
-| `retries: 5`        | Tras cinco fallos consecutivos contabilizados, el contenedor pasa a `unhealthy`.                                               |
-
-Estas comprobaciones verifican que los servicios responden; no prueban el flujo completo de registros ni llaman a Gemini, por lo que no consumen su cuota. Docker sigue comprobándolos después del arranque, pero un estado `unhealthy` no provoca por sí solo un reinicio automático.
 
 ### Opción B: desarrollo local
 

@@ -26,14 +26,17 @@ export class GeminiService {
   private readonly ai: GoogleGenAI;
   private readonly model: string;
 
+  // Inyectamos el servicio de configuración para obtener las credenciales y configuraciones necesarias
   constructor(private readonly configService: ConfigService) {
+    // Obtenemos la clave de API de Gemini desde las variables de entorno
     const apiKey = this.configService.getOrThrow<string>('GEMINI_API_KEY');
-
+    // Obtenemos el modelo de Gemini desde las variables de entorno
     this.model = this.configService.getOrThrow<string>('GEMINI_MODEL');
-
+    // Inicializamos el cliente de Gemini con la clave de API
     this.ai = new GoogleGenAI({ apiKey });
   }
 
+  // Este método genera un insight utilizando el modelo de Gemini basado en el prompt proporcionado
   async generateInsight(prompt: string): Promise<InsightContent> {
     const response = await this.ai.interactions.create(
       {
@@ -64,6 +67,7 @@ export class GeminiService {
       { timeout: 60_000, maxRetries: 0 },
     );
 
+    // Verificamos si la respuesta de Gemini contiene texto; si no, lanzamos un error
     const text = response.output_text;
 
     if (!text) {
@@ -71,12 +75,14 @@ export class GeminiService {
     }
 
     let result: unknown;
+    // Intentamos parsear la respuesta de Gemini como JSON; si falla, lanzamos un error
     try {
       result = JSON.parse(text);
     } catch {
       throw new GeminiInvalidResponseError('Gemini returned malformed JSON');
     }
 
+    // Verificamos si el resultado parseado cumple con la estructura esperada de InsightContent; si no, lanzamos un error
     if (!isInsightContent(result)) {
       throw new GeminiInvalidResponseError('Gemini returned an invalid insight');
     }

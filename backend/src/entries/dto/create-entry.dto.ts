@@ -10,6 +10,8 @@ import {
   Min,
 } from 'class-validator';
 
+// Esta clase define la estructura de datos para crear una nueva entrada en el sistema.
+// Cada propiedad tiene validaciones específicas para asegurar que los datos ingresados sean correctos y cumplan con los requisitos establecidos.
 export class CreateEntryDto {
   @IsDateString({ strict: true }, { message: 'La fecha debe ser una fecha válida.' })
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'La fecha debe tener el formato YYYY-MM-DD.' })
