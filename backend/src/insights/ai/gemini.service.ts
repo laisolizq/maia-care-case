@@ -82,7 +82,7 @@ export class GeminiService {
       { timeout: 300_000, maxRetries: 0 },
     );
 
-    // Verificamos si la respuesta de Gemini contiene texto; si no, lanzamos un error
+    // Verificamos si la respuesta de Gemini contiene texto. Si no, lanzamos un error
     const text = response.output_text;
 
     if (!text) {
@@ -90,14 +90,14 @@ export class GeminiService {
     }
 
     let result: unknown;
-    // Intentamos parsear la respuesta de Gemini como JSON; si falla, lanzamos un error
+    // Intentamos parsear la respuesta de Gemini como JSON. Si falla, lanzamos un error
     try {
       result = JSON.parse(text);
     } catch {
       throw new GeminiInvalidResponseError('Gemini returned malformed JSON');
     }
 
-    // Verificamos si el resultado parseado cumple con la estructura esperada de InsightContent; si no, lanzamos un error
+    // Verificamos si el resultado parseado cumple con la estructura esperada de InsightContent. Si no, lanzamos un error
     if (!isInsightContent(result)) {
       throw new GeminiInvalidResponseError('Gemini returned an invalid insight');
     }

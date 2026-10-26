@@ -25,15 +25,7 @@ Si Docker te da problemas de permisos al arrancar en Linux, puedes consultar la 
 
 Para generar insights con IA necesitas una clave de Gemini. Puedes obtenerla en [Google AI Studio](https://aistudio.google.com/api-keys): inicia sesión, pulsa **Create API key**, selecciona o crea un proyecto y copia la clave. Más abajo explico dónde guardarla según cómo arranques el proyecto.
 
-Si no tienes clave o la API no está disponible, puedes probar el flujo completo poniendo esto en `backend/.env`:
-
-```dotenv
-GEMINI_API_KEY=MOCK
-```
-
-En este modo no se llama a Gemini ni se consume cuota, y `GEMINI_MODEL` no se utiliza. La respuesta es un ejemplo fijo, marcado como **Análisis simulado (MOCK)**, que no analiza los registros. Sigues necesitando al menos tres registros y el resultado se guarda en el historial con sus referencias.
-
-Después de cambiar la clave, reinicia el backend si trabajas en local. Si usas Docker, vuelve a ejecutar el comando con `up --build -d --wait` completo que aparece abajo para aplicar los cambios. Para volver a Gemini, sustituye `MOCK` por tu clave real y configura el modelo. Los insights simulados siguen en el historial, pero no se reutilizan como si fueran respuestas de Gemini.
+Si no tienes clave o la API no está disponible, también puedes usar un **análisis simulado**, poniendo `MOCK` (en mayúsculas) en lugar de la clave. Devuelve un ejemplo fijo, identificado como simulado, sin llamar a Gemini ni consumir cuota.
 
 ### Opción A: aplicación completa en Docker
 
@@ -50,7 +42,13 @@ Crea `backend/.env` a partir de `backend/.env.example`. Si ya existe, conserva e
 cp backend/.env.example backend/.env
 ```
 
-En ese archivo, pega la clave en `GEMINI_API_KEY` y comprueba `GEMINI_MODEL`. Docker configura la conexión interna a MongoDB, así que no necesitas cambiar `MONGODB_URI`.
+En ese archivo, pega tu clave en `GEMINI_API_KEY` y comprueba `GEMINI_MODEL`. Si prefieres el análisis simulado, pon esto en lugar de la clave:
+
+```dotenv
+GEMINI_API_KEY=MOCK
+```
+
+En modo simulado no necesitas cambiar `GEMINI_MODEL`. Docker configura la conexión interna a MongoDB, así que tampoco necesitas cambiar `MONGODB_URI`.
 
 **2. Construir y levantar los tres servicios**
 
@@ -62,7 +60,7 @@ docker compose -f docker-compose.yml -f docker-compose.full.yml up --build -d --
 
 La primera ejecución necesita Internet para descargar imágenes, dependencias y fuentes. Puede tardar varios minutos.
 
-Cada Dockerfile sigue los mismos pasos: parte de Node.js 22, instala las dependencias con `npm ci`, copia el código y ejecuta `npm run build`. Al arrancar el contenedor, el backend ejecuta `node dist/main.js` y el frontend `npm start`. He dejado una sola etapa en cada Dockerfile para que sea más fácil seguir el proceso.
+Cada Dockerfile sigue los mismos pasos: parte de Node.js 22, instala las dependencias con `npm ci`, copia el código y ejecuta `npm run build`. Al arrancar el contenedor, el backend ejecuta `node dist/main.js` y el frontend `npm start`.
 
 Compose conecta los tres servicios y mantiene los healthchecks: el backend espera a que MongoDB responda y el frontend espera al backend. Con `--wait`, el comando termina cuando los tres han superado esas comprobaciones.
 
@@ -85,9 +83,25 @@ docker compose -f docker-compose.yml -f docker-compose.full.yml logs -f backend 
 docker compose -f docker-compose.yml -f docker-compose.full.yml down
 ```
 
-Para volver a arrancar, usa el comando `up` anterior. Si has cambiado el código, `--build` reconstruye las imágenes con esos cambios.
+Para volver a arrancar:
 
-Las dos opciones comparten la base de datos local si se usan desde la misma carpeta. Antes de cambiar de una a otra, detén el frontend y el backend, porque utilizan los mismos puertos 3000 y 3001. No añadas `-v` al comando `down` si quieres conservar los datos.
+```bash
+docker compose -f docker-compose.yml -f docker-compose.full.yml up
+```
+
+Si has cambiado el código o cambiado la clave de Gemini, `--build` reconstruye las imágenes con esos cambios:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.full.yml up --build -d --wait
+```
+
+Si quieres borrar los datos de la db:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.full.yml down -v
+```
+
+Las dos opciones de arranque comparten la base de datos local si se usan desde la misma carpeta. Si vas a probar la siguiente opción también, detén el frontend y el backend, porque utilizan los mismos puertos 3000 y 3001. No añadas `-v` al comando `down` si quieres conservar los datos.
 
 ### Opción B: desarrollo local
 
@@ -96,7 +110,7 @@ Las dos opciones comparten la base de datos local si se usan desde la misma carp
 - Node.js **20.19 o superior**. Recomiendo Node.js 22, que es la versión usada en Docker.
 - npm
 - Docker con Docker Compose (para la base de datos MongoDB).
-- Una clave de Gemini o `GEMINI_API_KEY=MOCK`, como se explica al principio.
+- Una clave de Gemini o usar el modo de análisis simulado.
 
 #### Configuración
 
@@ -116,13 +130,15 @@ El script `install.sh` prepara el entorno:
 - Crea `frontend/.env.local` con la URL del backend, si todavía no existe.
 - Conserva los archivos de configuración existentes.
 
-Después, edita `backend/.env` e introduce la clave y el modelo de Gemini. He dejado un modelo por defecto; comprueba que esté disponible para tu proyecto:
+Después, edita `backend/.env` e introduce la clave y el modelo de Gemini. He dejado un modelo por defecto.
 
 ```dotenv
 MONGODB_URI=mongodb://127.0.0.1:27017/maia-care
 GEMINI_API_KEY=<TU_API_KEY>
 GEMINI_MODEL=gemini-3.8-flash
 ```
+
+Si prefieres el análisis simulado, sustituye `<TU_API_KEY>` por `MOCK`, dejando la línea como `GEMINI_API_KEY=MOCK`. En ese caso, `GEMINI_MODEL` no se utiliza. Si cambias esta configuración con el backend arrancado, reinícialo para aplicar los cambios.
 
 #### Inicio rápido
 
@@ -173,7 +189,7 @@ Si todavía no tienes `backend/.env`, créalo con:
 cp backend/.env.example backend/.env
 ```
 
-Edita `backend/.env` y configura Gemini como se explica arriba.
+Edita `backend/.env`: pega tu clave en `GEMINI_API_KEY` y comprueba `GEMINI_MODEL`, o pon `GEMINI_API_KEY=MOCK` para usar el análisis simulado.
 
 Crea `frontend/.env.local` con el siguiente contenido:
 
@@ -230,17 +246,17 @@ maia-care-case/
 
 - **Consultas separadas de la lógica:** registros, insights y usuarias tienen su propio repositorio (`EntriesRepository`, `InsightsRepository` y `UsersRepository`). Así, los servicios no construyen las consultas a MongoDB. Para esta demo no he añadido un repositorio genérico.
 - **Una usuaria de demostración:** el backend la crea si no existe y la reutiliza después. He mantenido `userId` en los datos para poder añadir más usuarias en el futuro.
-- **Una entrada por usuaria y fecha:** la fecha se representa como `YYYY-MM-DD` y un índice único de MongoDB sobre `(userId, date)` evita duplicados, también ante peticiones concurrentes. Se permite registrar hoy y días anteriores. La fecha debe existir en el calendario y no ser futura. Para que navegador y servidor coincidan, la demo utiliza `Europe/Madrid`; en una versión multiusuaria, esta zona dependería de cada usuaria.
-- **Generación manual:** el análisis solo se solicita cuando la usuaria pulsa el botón.
-- **Selección de datos:** se requieren al menos **3 registros** y se analizan como máximo los **7 más recientes según la fecha del registro**, no la fecha de creación en la base de datos. Tres permiten comparar varios días y siete limitan el contexto y el coste del proveedor. Son decisiones de producto para esta demo, no umbrales clínicos.
+- **Una entrada por usuaria y fecha:** la fecha se representa como `YYYY-MM-DD` y un índice único de MongoDB sobre `(userId, date)` evita duplicados, también ante peticiones concurrentes. Se permite registrar hoy y días anteriores. La fecha debe existir en el calendario y no ser futura. Para que navegador y servidor coincidan, la demo utiliza `Europe/Madrid`. En una versión multiusuaria, esta zona dependería de cada usuaria.
+- **Generación manual de insights:** el análisis solo se solicita cuando la usuaria pulsa el botón.
+- **Selección de datos:** se requieren al menos **3 registros** y se analizan como máximo los **7 más recientes según la fecha del registro**, no la fecha de creación en la base de datos de esos registros. Tres permiten comparar varios días y siete limitan el contexto y el coste del proveedor. Son decisiones de producto para esta demo.
 - **Historial:** cada insight guarda los identificadores (`entryIds`) de los registros utilizados para generarlo. Así se puede saber de dónde sale cada análisis y conservar los anteriores.
-- **Evitar duplicados:** los IDs de los registros se ordenan para calcular `entriesKey`. Un índice único `(userId, entriesKey)` impide almacenar dos insights para el mismo conjunto. Si ya existe, se recupera sin llamar de nuevo a Gemini.
+- **Evitar duplicados:** los IDs de los registros se ordenan para calcular `entriesKey`. Un índice único `(userId, entriesKey)` impide almacenar dos insights para el mismo conjunto. Si ya existe, se recupera sin llamar de nuevo a Gemini. Añado "mock:" en caso de que se use el simulador, ya que entonces si me interesa generar un nuevo insight para esos registros si se empieza a usar Gemini.
 
 ### Elección de MongoDB
 
 He elegido MongoDB con Mongoose porque los registros y los insights encajan en documentos pequeños con arrays de síntomas, patrones y temas. Mongoose permite definir los esquemas, las referencias y los índices únicos junto al código TypeScript. Con Docker se puede arrancar la base de datos sin instalar MongoDB en el equipo.
 
-Hay una limitación: `userId` y `entryIds` no son claves foráneas, así que la aplicación debe mantener esas relaciones correctamente. Para un producto con más relaciones, borrados o transacciones entre entidades, valoraría PostgreSQL. En esta demo los registros no se editan ni se borran, y las referencias permiten saber cuáles se usaron sin copiar todo su contenido al insight.
+Hay una limitación: `userId` y `entryIds` son referencias, pero MongoDB no las valida como foreign keys, así que la aplicación debe mantener esas relaciones correctamente. Para un producto con más relaciones, borrados o transacciones entre entidades, valoraría usar PostgreSQL. En esta demo los registros no se editan ni se borran, y las referencias permiten saber cuáles se usaron sin copiar todo su contenido al insight.
 
 ### Gestión de usuarias
 
@@ -272,6 +288,8 @@ Entre los errores previstos están `400 Bad Request` cuando no hay suficientes r
 Para llamar a Gemini uso el SDK oficial **`@google/genai`** desde `GeminiService`, en el backend. La clave y el modelo se configuran en `backend/.env`.
 
 `GeminiService` también contiene el modo mock: con la clave `MOCK` devuelve un ejemplo con los mismos campos (`summary`, `patterns` y `topicsToDiscuss`) sin crear el cliente de Gemini. La lógica de selección de registros y guardado sigue en `InsightsService`. Este modo se activa solo mediante la configuración; un error de la API real sigue mostrando su error y no se sustituye por un resultado ficticio.
+
+El ejemplo aparece marcado como **Análisis simulado (MOCK)** y no analiza los registros. Sigues necesitando al menos tres registros y el resultado se guarda en el historial con sus referencias. Para volver a Gemini, sustituye `MOCK` por tu clave real y configura el modelo. Los insights simulados se conservan en el historial, pero no se reutilizan como si fueran respuestas de Gemini.
 
 ### Qué se envía y qué se espera recibir
 
@@ -312,7 +330,7 @@ Pido a Gemini un **JSON estructurado** con esos tres campos. Antes de guardar el
 5. **Solo si la validación es correcta**, el contenido se guarda como insight (asociado a los registros originales).
 6. Los fallos de la API o de validación se gestionan para evitar guardar resultados incorrectos y devolver un error controlado al frontend.
 
-La validación garantiza la **estructura**, no la exactitud médica o estadística del contenido.
+La validación garantiza la **estructura**, no la exactitud médica.
 
 ### Qué pasa si Gemini falla
 

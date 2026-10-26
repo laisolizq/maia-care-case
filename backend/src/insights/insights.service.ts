@@ -33,7 +33,7 @@ export class InsightsService {
     // Obtenemos o creamos un usuario de demostración
     const user = await this.usersService.getOrCreateDemoUser();
 
-    // Comprobamos si el usuario de demostración está disponible; si no, lanzamos una excepción
+    // Comprobamos si el usuario de demostración está disponible. Si no, lanzamos una excepción
     if (!user) {
       throw new InternalServerErrorException('Demo user unavailable');
     }
