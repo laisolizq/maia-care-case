@@ -79,7 +79,7 @@ export class GeminiService {
           },
         },
       },
-      { timeout: 60_000, maxRetries: 0 },
+      { timeout: 300_000, maxRetries: 0 },
     );
 
     // Verificamos si la respuesta de Gemini contiene texto; si no, lanzamos un error

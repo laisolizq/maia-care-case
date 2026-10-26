@@ -329,7 +329,7 @@ Si falla la generación, el backend devuelve `{ statusCode, code, message }` y e
 | 502  | `GEMINI_INVALID_RESPONSE`  | Respuesta vacía, JSON mal formado o contenido inválido. |
 | 502  | `GEMINI_GENERATION_FAILED` | Error de generación no clasificado.                     |
 
-La llamada tiene un límite de 60 segundos y no se reintenta automáticamente. Si falla, no se guarda el insight. En los logs se registra el error controlado, sin copiar la respuesta original del proveedor ni los datos enviados.
+La llamada tiene un límite de 5 minutos y no se reintenta automáticamente. Si falla, no se guarda el insight. En los logs se registra el error controlado, sin copiar la respuesta original del proveedor ni los datos enviados.
 
 ## 4. Privacidad y seguridad
 

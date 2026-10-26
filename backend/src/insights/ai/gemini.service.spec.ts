@@ -77,7 +77,7 @@ describe('GeminiService', () => {
         model: 'fake-model',
         input: 'Analiza estos registros',
       }),
-      { timeout: 60_000, maxRetries: 0 },
+      { timeout: 300_000, maxRetries: 0 },
     );
   });
 
