@@ -6,13 +6,18 @@ import { GeminiService } from './gemini.service.js';
 import { GeminiInvalidResponseError } from './gemini-error.js';
 
 // Creamos el mock de la llamada a Gemini.
-const { createMock } = vi.hoisted(() => ({
+const { createMock, constructorMock } = vi.hoisted(() => ({
   createMock: vi.fn(),
+  constructorMock: vi.fn(),
 }));
 
 // Sustituimos el SDK real por una implementación simulada.
 vi.mock('@google/genai', () => ({
   GoogleGenAI: class {
+    constructor(options: unknown) {
+      constructorMock(options);
+    }
+
     interactions = {
       create: createMock,
     };
@@ -74,6 +79,31 @@ describe('GeminiService', () => {
       }),
       { timeout: 60_000, maxRetries: 0 },
     );
+  });
+
+  it('should generate a clearly labelled mock without a model or SDK client', async () => {
+    constructorMock.mockClear();
+    const config = new ConfigService({ GEMINI_API_KEY: 'MOCK' });
+    const getConfig = vi.spyOn(config, 'getOrThrow');
+    const mockService = new GeminiService(config);
+
+    const result = await mockService.generateInsight('Registros de prueba');
+
+    expect(mockService.isMock).toBe(true);
+    expect(result.summary).toContain('Análisis simulado (MOCK)');
+    expect(result.patterns).toEqual(expect.arrayContaining([expect.any(String)]));
+    expect(result.topicsToDiscuss).toEqual(expect.arrayContaining([expect.any(String)]));
+    expect(getConfig).toHaveBeenCalledExactlyOnceWith('GEMINI_API_KEY');
+    expect(constructorMock).not.toHaveBeenCalled();
+    expect(createMock).not.toHaveBeenCalled();
+  });
+
+  it('should not silently use the mock when the real API rejects a request', async () => {
+    const quotaError = Object.assign(new Error('Quota exceeded'), { status: 429 });
+    createMock.mockRejectedValue(quotaError);
+
+    expect(service.isMock).toBe(false);
+    await expect(service.generateInsight('Registros de prueba')).rejects.toBe(quotaError);
   });
 
   it('should reject an empty Gemini response', async () => {

@@ -7,12 +7,14 @@ import { generateInsight, getInsights } from '@/lib/api/insights';
 import { ApiError } from '@/lib/api/client';
 import type { Insight } from '@/types/insight';
 
+// Componente que permite generar un nuevo insight y mostrar el resultado, incluyendo patrones identificados y temas para discutir con un profesional.
 export default function InsightGenerator() {
   const [insight, setInsight] = useState<Insight | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
+  // Función para manejar la generación de un nuevo insight, actualizando el estado del componente según el resultado de la operación.
   async function handleGenerate() {
     setLoading(true);
     setError(null);
@@ -28,9 +30,9 @@ export default function InsightGenerator() {
       const alreadyExisted = previousInsights.some((previous) => previous._id === result._id);
 
       if (alreadyExisted) {
-        setMessage('✓ Este análisis ya estaba actualizado.');
+        setMessage('Este análisis ya estaba actualizado.');
       } else {
-        setMessage('✨ Nuevo análisis generado correctamente.');
+        setMessage('Nuevo análisis generado correctamente.');
       }
     } catch (error) {
       if (error instanceof ApiError) {
@@ -43,6 +45,7 @@ export default function InsightGenerator() {
     }
   }
 
+  // Renderizamos el componente, mostrando un botón para generar un insight, un enlace al historial de insights y el resultado del análisis si está disponible.
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">

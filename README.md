@@ -16,14 +16,24 @@ Aplicación web para registrar cómo se encuentra una usuaria y generar análisi
 
 Hay dos formas de ejecutar el proyecto:
 
-- **Todo en Docker:** solo necesitas Docker con Compose y una clave de Gemini. No hace falta instalar Node.js ni npm en el equipo.
+- **Todo en Docker:** solo necesitas Docker con Compose y una clave de Gemini, o usar el modo mock. No hace falta instalar Node.js ni npm en el equipo.
 - **Desarrollo local:** frontend y backend se ejecutan con Node.js; MongoDB sigue en Docker.
 
 Si Docker te da problemas de permisos al arrancar en Linux, puedes consultar la [documentación oficial de Docker](https://docs.docker.com/engine/install/linux-postinstall/).
 
 ### Clave de Gemini
 
-Para generar insights necesitas una clave de Gemini. Puedes obtenerla en [Google AI Studio](https://aistudio.google.com/api-keys): inicia sesión, pulsa **Create API key**, selecciona o crea un proyecto y copia la clave. Más abajo explico dónde guardarla según cómo arranques el proyecto.
+Para generar insights con IA necesitas una clave de Gemini. Puedes obtenerla en [Google AI Studio](https://aistudio.google.com/api-keys): inicia sesión, pulsa **Create API key**, selecciona o crea un proyecto y copia la clave. Más abajo explico dónde guardarla según cómo arranques el proyecto.
+
+Si no tienes clave o la API no está disponible, puedes probar el flujo completo poniendo esto en `backend/.env`:
+
+```dotenv
+GEMINI_API_KEY=MOCK
+```
+
+En este modo no se llama a Gemini ni se consume cuota, y `GEMINI_MODEL` no se utiliza. La respuesta es un ejemplo fijo, marcado como **Análisis simulado (MOCK)**, que no analiza los registros. Sigues necesitando al menos tres registros y el resultado se guarda en el historial con sus referencias.
+
+Después de cambiar la clave, reinicia el backend si trabajas en local. Si usas Docker, vuelve a ejecutar el comando con `up --build -d --wait` completo que aparece abajo para aplicar los cambios. Para volver a Gemini, sustituye `MOCK` por tu clave real y configura el modelo. Los insights simulados siguen en el historial, pero no se reutilizan como si fueran respuestas de Gemini.
 
 ### Opción A: aplicación completa en Docker
 
@@ -86,7 +96,7 @@ Las dos opciones comparten la base de datos local si se usan desde la misma carp
 - Node.js **20.19 o superior**. Recomiendo Node.js 22, que es la versión usada en Docker.
 - npm
 - Docker con Docker Compose (para la base de datos MongoDB).
-- Una clave de Gemini, como se explica al principio.
+- Una clave de Gemini o `GEMINI_API_KEY=MOCK`, como se explica al principio.
 
 #### Configuración
 
@@ -260,6 +270,8 @@ Entre los errores previstos están `400 Bad Request` cuando no hay suficientes r
 ## 3. Integración con inteligencia artificial
 
 Para llamar a Gemini uso el SDK oficial **`@google/genai`** desde `GeminiService`, en el backend. La clave y el modelo se configuran en `backend/.env`.
+
+`GeminiService` también contiene el modo mock: con la clave `MOCK` devuelve un ejemplo con los mismos campos (`summary`, `patterns` y `topicsToDiscuss`) sin crear el cliente de Gemini. La lógica de selección de registros y guardado sigue en `InsightsService`. Este modo se activa solo mediante la configuración; un error de la API real sigue mostrando su error y no se sustituye por un resultado ficticio.
 
 ### Qué se envía y qué se espera recibir
 

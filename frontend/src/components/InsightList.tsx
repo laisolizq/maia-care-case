@@ -10,11 +10,13 @@ import { ratingColors, getRatingIndex } from '@/lib/entry-ratings';
 import type { Insight } from '@/types/insight';
 import type { EntryResponse } from '@/types/entry';
 
+// Función para formatear la fecha de un registro en formato "dd/mm/yyyy".
 function formatDate(date: string): string {
   const [year, month, day] = date.split('-');
   return `${day}/${month}/${year}`;
 }
 
+// Función para formatear la fecha de un insight
 function formatInsightDate(date: string): string {
   return new Date(date).toLocaleDateString('es-ES', {
     day: 'numeric',
@@ -23,12 +25,14 @@ function formatInsightDate(date: string): string {
   });
 }
 
+// Componente que muestra una lista de insights generados, incluyendo el resumen, patrones identificados, temas para discutir y los registros utilizados en el análisis.
 export default function InsightList() {
   const [insights, setInsights] = useState<Insight[]>([]);
   const [entries, setEntries] = useState<EntryResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Efecto para cargar los insights y registros desde la API al montar el componente.
   useEffect(() => {
     let active = true;
 
@@ -78,10 +82,12 @@ export default function InsightList() {
     );
   }
 
+  // Ordenamos los insights por fecha de creación de manera descendente (del más reciente al más antiguo).
   const sortedInsights = [...insights].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
+  // Creamos un mapa de registros por su ID para facilitar la búsqueda de los registros utilizados en cada insight.
   const entriesById = new Map(entries.map((entry) => [entry._id, entry]));
 
+  // Renderizamos la lista de insights, mostrando el resumen, patrones identificados, temas para discutir y los registros utilizados en cada análisis.
   return (
     <div className="space-y-4">
       {sortedInsights.map((insight) => {

@@ -1,6 +1,7 @@
 import EntryList from '@/components/EntryList';
 import Link from 'next/link';
 
+// Componente de la página de registros, que muestra un historial de registros del usuario y un enlace para volver a la página de inicio.
 export default function EntriesPage() {
   return (
     <main className="min-h-screen bg-white">

@@ -6,17 +6,20 @@ import { getEntries } from '@/lib/api/entries';
 import { ratingFields, ratingColors, getRatingIndex } from '@/lib/entry-ratings';
 import type { EntryResponse } from '@/types/entry';
 
+// Función para formatear la fecha de un registro en formato "dd/mm/yyyy".
 function formatDate(date: string): string {
   const [year, month, day] = date.split('-');
 
   return `${day}/${month}/${year}`;
 }
 
+// Componente que muestra una lista de registros del usuario, incluyendo indicadores visuales, síntomas y notas adicionales.
 export default function EntryList() {
   const [entries, setEntries] = useState<EntryResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Efecto para cargar los registros desde la API al montar el componente.
   useEffect(() => {
     let active = true;
 
@@ -57,8 +60,10 @@ export default function EntryList() {
     return <p className="text-maia-dark">Todavía no tienes registros.</p>;
   }
 
+  // Ordenamos los registros por fecha de manera descendente (del más reciente al más antiguo).
   const sortedEntries = [...entries].sort((a, b) => b.date.localeCompare(a.date));
 
+  // Renderizamos la lista de registros, mostrando la fecha, los indicadores visuales, los síntomas y las notas de cada registro.
   return (
     <div className="space-y-4">
       {sortedEntries.map((entry) => (

@@ -23,21 +23,36 @@ function isInsightContent(value: unknown): value is InsightContent {
 
 @Injectable()
 export class GeminiService {
-  private readonly ai: GoogleGenAI;
+  readonly isMock: boolean;
+  private readonly ai: GoogleGenAI | null;
   private readonly model: string;
 
   // Inyectamos el servicio de configuración para obtener las credenciales y configuraciones necesarias
   constructor(private readonly configService: ConfigService) {
     // Obtenemos la clave de API de Gemini desde las variables de entorno
     const apiKey = this.configService.getOrThrow<string>('GEMINI_API_KEY');
+    this.isMock = apiKey.trim() === 'MOCK';
     // Obtenemos el modelo de Gemini desde las variables de entorno
-    this.model = this.configService.getOrThrow<string>('GEMINI_MODEL');
+    this.model = this.isMock ? 'mock' : this.configService.getOrThrow<string>('GEMINI_MODEL');
     // Inicializamos el cliente de Gemini con la clave de API
-    this.ai = new GoogleGenAI({ apiKey });
+    this.ai = this.isMock ? null : new GoogleGenAI({ apiKey });
   }
 
   // Este método genera un insight utilizando el modelo de Gemini basado en el prompt proporcionado
   async generateInsight(prompt: string): Promise<InsightContent> {
+    if (!this.ai) {
+      return {
+        summary:
+          'Análisis simulado (MOCK). Esta respuesta de ejemplo permite probar la aplicación sin llamar a Gemini. No representa un análisis de tus registros.',
+        patterns: [
+          'Ejemplo ficticio de patrón: coincidencia entre días con mejor descanso y mayor energía.',
+        ],
+        topicsToDiscuss: [
+          'Ejemplo de tema para comentar: dudas sobre los cambios de bienestar anotados en el diario.',
+        ],
+      };
+    }
+
     const response = await this.ai.interactions.create(
       {
         model: this.model,

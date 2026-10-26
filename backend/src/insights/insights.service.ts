@@ -52,10 +52,13 @@ export class InsightsService {
     const entryIds = entries.map((entry) => entry._id);
 
     // Ordenamos los IDs y los unimos en una cadena para formar la clave
-    const entriesKey = entryIds
+    const recordsKey = entryIds
       .map((id) => id.toString())
       .sort()
       .join(',');
+
+    // Un análisis simulado no debe reutilizarse al volver a la API real.
+    const entriesKey = this.geminiService.isMock ? `mock:${recordsKey}` : recordsKey;
 
     // Verificamos si ya existe un insight para esta combinación de registros
     const existingInsight = await this.insightsRepository.findByEntriesKey(user._id, entriesKey);

@@ -27,6 +27,7 @@ describe('InsightsService', () => {
   };
 
   const geminiServiceMock = {
+    isMock: false,
     generateInsight: vi.fn(),
   };
 
@@ -38,6 +39,7 @@ describe('InsightsService', () => {
 
   beforeEach(async () => {
     vi.resetAllMocks();
+    geminiServiceMock.isMock = false;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -105,6 +107,45 @@ describe('InsightsService', () => {
     expect(result).toEqual(existingInsight);
     expect(geminiServiceMock.generateInsight).not.toHaveBeenCalled();
     expect(insightModelMock.create).not.toHaveBeenCalled();
+  });
+
+  it('should reuse mock insights but generate a separate insight when returning to Gemini', async () => {
+    const entries = Array.from({ length: 3 }, () => ({ _id: new Types.ObjectId() }));
+    entriesServiceMock.findLatest.mockResolvedValue(entries);
+    const saved = new Map<string, Insight & { _id: Types.ObjectId }>();
+    insightModelMock.findOne.mockImplementation(({ entriesKey }: { entriesKey: string }) => ({
+      exec: async () => saved.get(entriesKey) ?? null,
+    }));
+    insightModelMock.create.mockImplementation(async (data: Insight) => {
+      const insight = Object.assign({ _id: new Types.ObjectId() }, data);
+      saved.set(data.entriesKey, insight);
+      return insight;
+    });
+    geminiServiceMock.generateInsight.mockResolvedValue({
+      summary: 'Análisis simulado (MOCK)',
+      patterns: [],
+      topicsToDiscuss: [],
+    });
+    geminiServiceMock.isMock = true;
+
+    const mockInsight = await service.generate();
+    expect(await service.generate()).toEqual(mockInsight);
+    expect(geminiServiceMock.generateInsight).toHaveBeenCalledOnce();
+
+    geminiServiceMock.isMock = false;
+    geminiServiceMock.generateInsight.mockResolvedValue({
+      summary: 'Respuesta del proveedor',
+      patterns: [],
+      topicsToDiscuss: [],
+    });
+    const realInsight = await service.generate();
+
+    expect(realInsight?._id).not.toEqual(mockInsight?._id);
+    expect(mockInsight?.entriesKey).toBe(`mock:${realInsight?.entriesKey}`);
+    expect(realInsight?.summary).toBe('Respuesta del proveedor');
+    expect(await service.generate()).toEqual(realInsight);
+    expect(geminiServiceMock.generateInsight).toHaveBeenCalledTimes(2);
+    expect(insightModelMock.create).toHaveBeenCalledTimes(2);
   });
 
   it('should generate and save a new insight', async () => {

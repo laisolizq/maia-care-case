@@ -8,6 +8,7 @@ import { getTodayDate } from '@/lib/calendar';
 import { ratingFields, ratingColors, type RatingField } from '@/lib/entry-ratings';
 import type { CreateEntry } from '@/types/entry';
 
+// Estado inicial de un nuevo registro
 const initialEntry: CreateEntry = {
   date: '',
   wellbeing: 0,
@@ -18,8 +19,10 @@ const initialEntry: CreateEntry = {
   notes: '',
 };
 
+// Lista de síntomas por defecto que se muestran si no hay síntomas conocidos.
 const DEFAULT_SYMPTOMS = ['Cansancio', 'Dolor de cabeza', 'Hinchazón'];
 
+// Componente de formulario para registrar el estado de ánimo del usuario, incluyendo indicadores visuales, selección de síntomas y notas adicionales.
 export default function EntryForm() {
   const [entry, setEntry] = useState<CreateEntry>(() => ({
     ...initialEntry,
@@ -108,7 +111,7 @@ export default function EntryForm() {
 
         return result;
       });
-
+      // Reseteamos el formulario a su estado inicial, con la fecha actual y sin síntomas seleccionados.
       setEntry({
         ...initialEntry,
         date: getTodayDate(),
@@ -150,7 +153,7 @@ export default function EntryForm() {
         />
       </div>
 
-      {/* Indicadores visuales */}
+      {/* Indicadores */}
       <div className="space-y-2">
         {ratingFields.map((field) => (
           <div key={field.key}>
@@ -227,6 +230,7 @@ export default function EntryForm() {
           </div>
         </div>
 
+        {/* Añadir nuevo síntoma */}
         <div className="mt-2 flex gap-2">
           <input
             type="text"
@@ -253,6 +257,7 @@ export default function EntryForm() {
           </button>
         </div>
 
+        {/* Síntomas seleccionados */}
         {entry.symptoms.length > 0 && (
           <div className="mt-5">
             <p className="mb-3 text-sm font-medium text-maia-light-2">Síntomas seleccionados</p>

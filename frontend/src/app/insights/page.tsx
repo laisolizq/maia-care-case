@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import InsightList from '@/components/InsightList';
 
+// Componente de la página de insights, que muestra un historial de insights generados y un enlace para volver a la página de inicio.
 export default function InsightsPage() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">

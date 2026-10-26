@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 import { Suspense } from 'react';
 
+// Componente principal de la página de inicio, que muestra un formulario para registrar el estado de ánimo del usuario y un generador de insights.
 export default async function Home() {
   return (
     <main className="min-h-screen bg-white">

@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   title: 'Maia Care — Registro de bienestar',
 };
 
+// Componente de diseño raíz que envuelve toda la aplicación, aplicando estilos globales y configurando la fuente.
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
